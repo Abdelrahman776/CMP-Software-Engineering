@@ -18,7 +18,8 @@ function fetchEmployees() {
         const deleteCell = document.createElement('td')
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
-        deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');
+        deleteButton.classList.add('btn', 'btn-danger', 'btn-sm', 'deletebtn');
+        deleteButton.onclick = () => deleteEmployee(item.id);
         deleteCell.appendChild(deleteButton);
 
         row.appendChild(deleteCell)
@@ -31,22 +32,82 @@ function fetchEmployees() {
 
 // TODO
 // add event listener to submit button
+document.getElementById("submitbtn").addEventListener('click', createEmployee)
 
 // TODO
 // add event listener to delete button
+// document.getElementById("deletebtn").addEventListener('click', deleteEmployee)
+// document.getElementsByClassName("btn-sm").addEventListener('click', deleteEmployee)
 
 // TODO
-function createEmployee (){
-  // get data from input field
-  // send data to BE
-  // call fetchEmployees
+function createEmployee() {
+  const name = document.getElementById('name').value;
+  const id = document.getElementById('id').value;
+
+  // Prepare the data to be sent to the backend
+  const employeeData = {
+    name: name,
+    id: id
+  };
+
+  // Send data to the backend
+  fetch('http://localhost:3000/api/v1/employee', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(employeeData)
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+  .then(() => {
+    // Clear input fields
+    document.getElementById('name').value = '';
+    document.getElementById('id').value = '';
+    // Refresh the employee list
+    fetchEmployees();
+  })
+  .catch(error => console.error('Error:', error));
 }
 
-// TODO
-function deleteEmployee (){
-  // get id
-  // send id to BE
-  // call fetchEmployees
+// Modify the deleteEmployee function to accept an id parameter
+function deleteEmployee(id) {
+  // If no id is provided, get it from the input field
+  if (!id) {
+    id = document.getElementById('id').value;
+  }
+
+  if (!id) {
+    alert('Please provide an employee ID');
+    return;
+  }
+
+  fetch(`http://localhost:3000/api/v1/employee/${id}`, {
+    method: 'DELETE',
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    // Clear the input field
+    document.getElementById('id').value = '';
+    // Refresh the employee list
+    fetchEmployees();
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error deleting employee');
+  });
 }
+
+// Prevent form submission default behavior
+document.getElementById('employeeForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  createEmployee();
+});
 
 fetchEmployees()
